@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chen.demo.dao.DocFileDao">
+    <sql id="docFileColumns">
+		a.ID as 'id',
+		a.NAME as 'name',
+		a.PARENT_ID as 'parentId',
+		b.NAME as 'parentName',
+		a.TYPES as 'types',
+		a.SIZE as 'size',
+		a.PATH as 'path',
+		a.UPTIME as
+		'upTime',
+		a.UPER as 'uper',
+		a.UPERNAME as
+		'uperName',
+		a.ADESCRIBE as 'describe',
+		a.RANK as 'rank',
+		a.DOWNNUMBER as
+		'downNumber',
+		a.IS_PRIVATE as 'isPrivate',
+		a.OWNER as 'owner',
+		a.department_id as 'departmentId',
+		a.FILE_SAVE_ID as 'fileSaveId',
+		a.IS_DOCTYPE as 'isDocType',
+		a.CLASSIFY as 'classify',
+		a.BUCKET as 'bucket'
+	</sql>
+
+    <sql id="dynamicWhere">
+        <where>
+            <if test="@Ognl@isNotEmpty(classify)"> AND a.CLASSIFY=#{classify}</if>
+            <if test="@Ognl@isNotEmpty(keyWord)">
+                <if test="@Ognl@isNotEmpty(startFromMobile)">
+                    AND (a.NAME LIKE CONCAT(CONCAT('%',#{keyWord}),'%') )
+                </if>
+                <if test="@Ognl@isEmpty(startFromMobile)">
+                    AND (a.NAME LIKE CONCAT(CONCAT('%',#{keyWord}),'%') OR a.UPERNAME LIKE CONCAT(CONCAT('%',#{keyWord}),'%'))
+                </if>
+            </if>
+            <if test="@Ognl@isNotEmpty(allparentIds)"> AND a.PARENT_ID IN (${allParentIds})</if>
+            <if test="@Ognl@isNotEmpty(uper)"> AND a.UPER =#{uper} </if>
+            <if test="@Ognl@isNotEmpty(eid)"> AND a.eid =#{eid} </if>
+            <if test="@Ognl@isNotEmpty(privateFlag) and privateFlag==0"> AND b.IS_PRIVATE =0 </if>
+            <if test="@Ognl@isNotEmpty(bDate) and @Ognl@isNotEmpty(eDate)"> AND a.UPTIME BETWEEN #{bDate} and #{eDate} </if>
+            <if test="@Ognl@isNotEmpty(departmentId)"> AND a.department_id =#{departmentId}  </if>
+            <if test="@Ognl@isNotEmpty(id)"> AND a.PARENT_ID =#{id} </if>
+            <if test="@Ognl@isNotEmpty(isDocType)"> AND a.IS_DOCTYPE =#{isDocType} </if>
+        </where>
+    </sql>
+
+    <sql id="sqlJoin">
+		LEFT JOIN UCP_DOCFILE b on a.PARENT_ID = b.ID
+	</sql>
+
+    <!-- 查询 -->
+    <!--
+        <select id="getAll" resultType="DocFile">
+            SELECT
+            <include refid="docFileColumns" />
+            FROM UCP_DOCFILE a
+            <include refid="sqlJoin" />
+            <include refid="dynamicWhere" />
+            <if test="@Ognl@isNotEmpty(orderField)">
+                order by a.${orderField} ${orderSeq}
+            </if>
+
+        </select>
+        -->
+    <!-- 排序查询 -->
+
+    <select id="getAll" resultType="docFile">
+        SELECT
+        <include refid="docFileColumns" />
+        FROM UCP_DOCFILE a
+        <include refid="sqlJoin" />
+        <include refid="dynamicWhere" />
+
+        <if test="@Ognl@isNotEmpty(orderField)">
+            order by a.IS_DOCTYPE DESC,a.${orderField} ${orderSeq}
+        </if>
+        <if test="@Ognl@isEmpty(orderField)">
+            order by a.IS_DOCTYPE DESC,a.UPTIME DESC
+        </if>
+
+    </select>
+
+    <select id="findById" resultType="docFile">
+        SELECT
+        <include refid="docFileColumns" />
+        FROM UCP_DOCFILE a
+        <include refid="sqlJoin" />
+        WHERE
+        a.ID = #{id}
+    </select>
+
+
+
+
+
+    <select id="getRoot" resultType="docFile">
+        SELECT
+        <include refid="docFileColumns" />
+        FROM UCP_DOCFILE a
+        <include refid="sqlJoin" />
+        WHERE
+        a.PARENT_ID = #{root} AND a.IS_DOCTYPE= 1
+    </select>
+
+
+
+
+    <update id="updatePath">
+        update UCP_DOCFILE set path=#{path},bucket=66 where id=#{id};
+    </update>
+</mapper>
